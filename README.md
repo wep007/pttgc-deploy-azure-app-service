@@ -59,7 +59,13 @@ export RESOURCE_GROUP="$(az group list --query "[?location=='eastasia']" | jq -r
  
 <img width="1512" alt="Screen Shot 2565-08-23 at 20 04 07" src="https://user-images.githubusercontent.com/46469458/186165619-ac871267-2a51-4aed-bc55-60612e7e48c7.png">
  
-7. Create Github Repo.
+7. Get `REGISTRY_LOGIN_SERVER`
+ 
+   ```console
+   az acr list | jq -r '.[].loginServer'
+   ```
+ 
+8. Create Github Repo.
 
  In the GitHub UI, navigate to your forked repository and select Settings > Secrets > Actions and Select New repository secret to add the following secrets:
 
