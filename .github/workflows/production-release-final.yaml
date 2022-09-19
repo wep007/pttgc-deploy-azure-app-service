@@ -1,11 +1,13 @@
 name: Production Release and Deploy
 
 on: 
-  release:
-    types:
-      - published
-    branches:
-      - main
+#  release:
+#    types:
+#      - published
+#    branches:
+#      - main
+  workflow_dispatch:
+    
 
 jobs:
   

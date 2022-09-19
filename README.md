@@ -100,10 +100,65 @@ deploy-dev:
           images: 'repo-name/simple-service:${{ github.sha }}'
 ```
 6. Commit and push the code, and see how the workflow is running
-7. Login to Azure portal, App Service and see the changes
+7. Login to Azure portal, App Service then select `dev` slot, and see the image tag from `Deployment Center`
 
 
 ## Exercise 2
 ### Deploy to production slot
 
+1. Create new workflow file name `production-release.yaml`
+```yaml
+name: Production Release and Deploy
 
+on: 
+  release:
+    types:
+      - published
+    branches:
+      - main
+
+jobs:
+  
+  retag-image:
+    name: Retag release image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
+
+      - run: echo "Retag image from tag ${{ github.sha }} to ${{ steps.get_version.outputs.VERSION }}"
+      - run: docker pull ${{ secrets.REGISTRY_LOGIN_SERVER }}/simple-service:${{ github.sha }}
+      - run: docker tag ${{ secrets.REGISTRY_LOGIN_SERVER }}/simple-service:${{ github.sha }} ${{ secrets.REGISTRY_LOGIN_SERVER }}/simple-service:${{ steps.get_version.outputs.VERSION }}
+      - run: docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/simple-service:${{ steps.get_version.outputs.VERSION }}
+
+  deploy: 
+    name: Deploy to App Service Production
+    runs-on: ubuntu-latest
+    needs: retag-image
+    steps:
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
+      - name: deploy production slot
+        uses: azure/webapps-deploy@v2
+        with:
+          # This value should match with the name of your app service (it could be difference from this example)
+          app-name: 'pttgc-simple-app'
+          # Add publish profile from secret that created from publish profile which we downloaded from Azure Portal
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          # slot-name, default value is production, we can ignore this line, however for the readability purpose, we should keep it as best practice
+          slot-name: production
+          images:  ${{ secrets.REGISTRY_LOGIN_SERVER }}/simple-service:${{ steps.get_version.outputs.VERSION }}
+```
+
+2. Commit and Push the code
+3. Wait until the `build` workflow success and then continue step 4
+4. Create new release with tag version `v1.0.0`, then click create release
+5. Go to `Actions` to see the progress of the `production-release` workflow
+6. Wait until the workflow is done, then go to the Azure Portal, on the production slow, check the image that deployed from `Deployment Center`
