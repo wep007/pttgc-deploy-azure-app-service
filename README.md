@@ -2,39 +2,35 @@
 
 
 ## Exercise 1
-### Set up basic CodeQL
-1. In the github repository to go menu `Security-->Code scanning`
-2. Click `Configure CodeQL alerts`
-3. (Optional) It will populate basic workflow with codeQL, adjust it as needed and then start commit
+### Deploy to Dev Slot
+1. Login to Azure Portal, goto `App Services` then select the App service from the list
+2. Go to `Overview` menu and click `Get publish profile` to download the publish profile
+![Download Publish profile](./assets/get-publish-profile-01.PNG)
+
+
+3. Create Secret name `AZURE_WEBAPP_PUBLISH_PROFILE` with the content from file that download
+from step 2
+4. Add another jobs to deploy to dev slot
+```yaml
+deploy-dev:
+    name: Deploy to Dev Slot
+    runs-on: ubuntu-latest
+    needs: containerized
+
+    steps:
+      - name: deploy dev slot
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'simple-service'
+          # Add publish profile from secret that created from publish profile which we downloaded from Azure Portal
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          images: 'repo-name/simple-service:${{ github.sha }}'
+```
+5. Commit and push the code, and see how the workflow is running
+6. Login to Azure portal, App Service and see the changes
 
 
 ## Exercise 2
-### Integrate with and existing workflow
-1. In `.github/workflows/build-workflow.yml` add the CodeQL job between `unittest` and `containerized`
+### Deploy to production slot
 
-```
-sourcecode-scanning:
-    name: Scan source code with CodeQL 
-    runs-on: ubuntu-latest
-    strategy:
-      matrix: 
-        language: ['csharp']
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Initial CodeQL
-        uses: github/codeql-action/init@v2
-        with:
-          languages: ${{ matrix.language }}
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v2
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
-        with:
-          category: "/language:${{matrix.language}}"
-```
-
-2. Commit and Push the code and see how the workflow is running
 
