@@ -81,7 +81,7 @@ Reference : https://docs.microsoft.com/en-us/azure/container-instances/container
 ![Download Publish profile](./assets/get-publish-profile-01.PNG)
 
 
-4. Create Secret name `AZURE_WEBAPP_PUBLISH_PROFILE` with the content from file that download
+4. Create Secret name `AZURE_WEBAPP_PUBLISH_PROFILE_DEV` with the content from file that download
 from step 2
 5. Add another jobs to deploy to dev slot
 ```yaml
@@ -96,7 +96,7 @@ deploy-dev:
         with:
           app-name: 'simple-service'
           # Add publish profile from secret that created from publish profile which we downloaded from Azure Portal
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV }}
           images: 'repo-name/simple-service:${{ github.sha }}'
 ```
 6. Commit and push the code, and see how the workflow is running
@@ -105,6 +105,9 @@ deploy-dev:
 
 ## Exercise 2
 ### Deploy to production slot
+
+#### Pre-requisits
+- Download the publish profile from deployment slot `production` and use its content to create secrets name `AZURE_WEBAPP_PUBLISH_PROFILE`
 
 1. Create new workflow file name `production-release.yaml`
 ```yaml
