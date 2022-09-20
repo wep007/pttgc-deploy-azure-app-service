@@ -19,6 +19,7 @@ namespace PTTGCSampleApp.Controllers
             AppInfo i = new AppInfo();
             i.AppName = "simple-service";
             i.Status = "OK";
+            // Add comment demo
 
             return new OkObjectResult(i);
         }
